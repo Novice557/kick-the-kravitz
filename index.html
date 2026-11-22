@@ -86,7 +86,6 @@ canvas {width:100%;height:100%}
 
 footer {padding:12px;color:#aaa}
 
-/* Cheat button */
 #cheatButton {
  position:fixed;
  top:12px;
@@ -101,7 +100,6 @@ footer {padding:12px;color:#aaa}
  cursor:pointer;
 }
 
-/* Cheat screen */
 #cheatScreen {
  display:none;
  position:fixed;
@@ -180,7 +178,6 @@ footer {padding:12px;color:#aaa}
 
 <button id="cheatButton">Cheats</button>
 
-<!-- Cheat code screen -->
 <div id="cheatScreen">
  <div class="cheatBox">
   <h2>Cheat Codes</h2>
@@ -205,7 +202,7 @@ footer {padding:12px;color:#aaa}
  </div>
 </div>
 
-<div id="upsideNotice">🙃 Upside Down Mode Active!</div>
+<div id="upsideNotice">Upside Down Mode Active!</div>
 
 <header>
 <h1>Kick The Kravitz</h1>
@@ -229,7 +226,7 @@ Score: <b id="score">0</b>
 </div>
 
 <div class="stat">
-Mood: <b id="mood">Happy 😊</b>
+Mood: <b id="mood">Happy</b>
 </div>
 
 <div class="stat">
@@ -259,26 +256,22 @@ let particles=[];
 let ball=null;
 let mood="Happy 😊";
 
-// Cheat menu elements
 const cheatScreen=document.getElementById("cheatScreen");
 const cheatInput=document.getElementById("cheatInput");
 const cheatResult=document.getElementById("cheatResult");
 
 let upsideDown=false;
 
-// Open cheat menu
 document.getElementById("cheatButton").addEventListener("click",()=>{
  cheatScreen.style.display="flex";
  cheatInput.value="";
  cheatResult.textContent="";
 });
 
-// Close cheat menu
 document.getElementById("backButton").addEventListener("click",()=>{
  cheatScreen.style.display="none";
 });
 
-// Activate cheat codes
 function activateCheat(){
 
  const code=cheatInput.value.trim();
@@ -295,19 +288,18 @@ function activateCheat(){
   document.body.style.transform=upsideDown?"rotate(180deg)":"none";
   document.body.style.transformOrigin="center center";
 
-  // Keep the screen fixed to the viewport
   document.body.style.width="100%";
   document.body.style.minHeight="100vh";
 
   cheatResult.textContent=upsideDown
-   ?"🙃 EVERYTHING IS UPSIDE DOWN!"
+   ?"UPSIDE DOWN!"
    :"The game is back to normal!";
 
   cheatResult.style.color="#c7b3ff";
 
  }else{
 
-  cheatResult.textContent="❌ Invalid cheat code! Try again.";
+  cheatResult.textContent="Cheat does not exist";
   cheatResult.style.color="#ff7777";
 
  }
