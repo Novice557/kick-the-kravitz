@@ -1,12 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kick The Kravitz</title>
+
 <style>
 * {box-sizing:border-box}
+
 body {
  margin:0;
  background:#151525;
@@ -14,12 +15,15 @@ body {
  font-family:Arial,sans-serif;
  text-align:center;
 }
+
 header {
  padding:15px;
  background:#24243d;
  border-bottom:3px solid #855cff;
 }
+
 h1 {margin:0;color:#a98aff}
+
 main {
  display:flex;
  justify-content:center;
@@ -28,6 +32,7 @@ main {
  padding:15px;
  flex-wrap:wrap;
 }
+
 #arena {
  width:600px;
  max-width:100%;
@@ -37,13 +42,16 @@ main {
  border-radius:15px;
  overflow:hidden;
 }
+
 canvas {width:100%;height:100%}
+
 #panel {
  width:220px;
  background:#24243d;
  padding:15px;
  border-radius:15px;
 }
+
 .tool {
  width:100%;
  padding:12px;
@@ -55,26 +63,149 @@ canvas {width:100%;height:100%}
  cursor:pointer;
  font-size:15px;
 }
+
 .tool:hover,.tool.active {
  background:#7956d9;
  border-color:#c2a9ff;
 }
+
 .stat {
  background:#171729;
  padding:10px;
  border-radius:8px;
  margin:10px 0;
 }
+
 #message {
  color:#c7b3ff;
  min-height:45px;
  margin-top:10px;
 }
+
 #reset {background:#a34b68}
+
 footer {padding:12px;color:#aaa}
+
+/* Cheat button */
+#cheatButton {
+ position:fixed;
+ top:12px;
+ left:12px;
+ z-index:100;
+ background:#7956d9;
+ color:white;
+ border:2px solid #c2a9ff;
+ padding:11px 15px;
+ border-radius:10px;
+ font-weight:bold;
+ cursor:pointer;
+}
+
+/* Cheat screen */
+#cheatScreen {
+ display:none;
+ position:fixed;
+ inset:0;
+ z-index:200;
+ background:#151525;
+ justify-content:center;
+ align-items:center;
+ padding:20px;
+}
+
+.cheatBox {
+ background:#24243d;
+ border:3px solid #855cff;
+ border-radius:20px;
+ padding:30px;
+ width:350px;
+ max-width:100%;
+ box-shadow:0 0 30px #7956d9;
+}
+
+.cheatBox h2 {
+ color:#b99aff;
+}
+
+#cheatInput {
+ width:100%;
+ padding:13px;
+ margin:15px 0;
+ border:2px solid #6960a5;
+ border-radius:9px;
+ background:#171729;
+ color:white;
+ font-size:18px;
+ text-align:center;
+}
+
+.cheatAction {
+ width:100%;
+ padding:12px;
+ margin:5px 0;
+ border:0;
+ border-radius:9px;
+ background:#7956d9;
+ color:white;
+ font-size:16px;
+ cursor:pointer;
+}
+
+.cheatAction:hover {
+ background:#9875f0;
+}
+
+#cheatResult {
+ min-height:55px;
+ color:#c7b3ff;
+ margin-top:15px;
+ font-size:17px;
+ font-weight:bold;
+}
+
+#upsideNotice {
+ display:none;
+ position:fixed;
+ bottom:15px;
+ right:15px;
+ z-index:150;
+ background:#7956d9;
+ padding:10px;
+ border-radius:8px;
+}
 </style>
 </head>
+
 <body>
+
+<button id="cheatButton">🎮 Cheats</button>
+
+<!-- Cheat code screen -->
+<div id="cheatScreen">
+ <div class="cheatBox">
+  <h2>🎮 Secret Cheat Codes</h2>
+  <p>Enter a secret code below!</p>
+
+  <input
+   id="cheatInput"
+   type="text"
+   placeholder="Enter cheat code..."
+   autocomplete="off"
+  >
+
+  <button class="cheatAction" id="submitCheat">
+   Activate Code
+  </button>
+
+  <div id="cheatResult"></div>
+
+  <button class="cheatAction" id="backButton">
+   ← Back to Game
+  </button>
+ </div>
+</div>
+
+<div id="upsideNotice">🙃 Upside Down Mode Active!</div>
 
 <header>
 <h1>Kick The Kravitz</h1>
@@ -82,10 +213,12 @@ footer {padding:12px;color:#aaa}
 </header>
 
 <main>
+
 <div id="arena">
 <canvas id="game" width="600" height="520"></canvas>
 </div>
 
+<div id="panel">
 
 <div class="stat">
 Pieces detached: <b id="broken">0</b>/6
@@ -108,6 +241,7 @@ Sadness: <b id="sadness">0%</b>
 <div id="message">
 Choose a tool and click the character!
 </div>
+
 </div>
 </main>
 
@@ -124,6 +258,67 @@ let pieces=[];
 let particles=[];
 let ball=null;
 let mood="Happy 😊";
+
+// Cheat menu elements
+const cheatScreen=document.getElementById("cheatScreen");
+const cheatInput=document.getElementById("cheatInput");
+const cheatResult=document.getElementById("cheatResult");
+
+let upsideDown=false;
+
+// Open cheat menu
+document.getElementById("cheatButton").addEventListener("click",()=>{
+ cheatScreen.style.display="flex";
+ cheatInput.value="";
+ cheatResult.textContent="";
+});
+
+// Close cheat menu
+document.getElementById("backButton").addEventListener("click",()=>{
+ cheatScreen.style.display="none";
+});
+
+// Activate cheat codes
+function activateCheat(){
+
+ const code=cheatInput.value.trim();
+
+ if(code==="877460"){
+
+  cheatResult.textContent="❤️ We love Justin ^_^ ❤️";
+  cheatResult.style.color="#ff91c8";
+
+ }else if(code.toLowerCase()==="upside"){
+
+  upsideDown=!upsideDown;
+
+  document.body.style.transform=upsideDown?"rotate(180deg)":"none";
+  document.body.style.transformOrigin="center center";
+
+  // Keep the screen fixed to the viewport
+  document.body.style.width="100%";
+  document.body.style.minHeight="100vh";
+
+  cheatResult.textContent=upsideDown
+   ?"🙃 EVERYTHING IS UPSIDE DOWN!"
+   :"The game is back to normal!";
+
+  cheatResult.style.color="#c7b3ff";
+
+ }else{
+
+  cheatResult.textContent="❌ Invalid cheat code! Try again.";
+  cheatResult.style.color="#ff7777";
+
+ }
+
+}
+
+document.getElementById("submitCheat").addEventListener("click",activateCheat);
+
+cheatInput.addEventListener("keydown",e=>{
+ if(e.key==="Enter")activateCheat();
+});
 
 const floor=465;
 
@@ -154,19 +349,16 @@ function drawBone(x1,y1,x2,y2,color="#e8e4d5",width=13){
 
 function drawCharacter(){
 
- // Shadow
  ctx.fillStyle="rgba(0,0,0,.25)";
  ctx.beginPath();
  ctx.ellipse(300,465,90,12,0,0,Math.PI*2);
  ctx.fill();
 
- // Torso
  if(!bones[5].detached){
   drawBone(300,175,300,335,"#8c92a9",27);
   drawBone(300,195,300,325,"#dcd9ca",12);
  }
 
- // Arms
  if(!bones[0].detached){
   drawBone(300,195,240,225);
   drawBone(240,225,215,290);
@@ -177,7 +369,6 @@ function drawCharacter(){
   drawBone(360,225,385,290);
  }
 
- // Legs
  if(!bones[2].detached){
   drawBone(300,325,270,365);
   drawBone(270,365,250,435);
@@ -188,7 +379,6 @@ function drawCharacter(){
   drawBone(330,365,350,435);
  }
 
- // Head and emotions
  if(!bones[4].detached){
 
   ctx.fillStyle="#cc883f";
@@ -198,7 +388,6 @@ function drawCharacter(){
 
   let sadness=detached;
 
-  // Eyes
   ctx.fillStyle="#262638";
   ctx.beginPath();
 
@@ -212,7 +401,6 @@ function drawCharacter(){
 
   ctx.fill();
 
-  // Eyebrows
   ctx.strokeStyle="#262638";
   ctx.lineWidth=3;
   ctx.beginPath();
@@ -231,7 +419,6 @@ function drawCharacter(){
 
   ctx.stroke();
 
-  // Mouth
   ctx.beginPath();
 
   if(sadness===0){
@@ -245,7 +432,6 @@ function drawCharacter(){
 
   ctx.stroke();
 
-  // Tears
   if(sadness>=3){
    ctx.fillStyle="#55cfff";
    ctx.beginPath();
@@ -254,14 +440,12 @@ function drawCharacter(){
    ctx.fill();
   }
 
-  // Heartbreak
   if(sadness>=6){
    ctx.font="25px Arial";
    ctx.fillText("💔",330,75);
   }
  }
 
- // Joints
  ctx.fillStyle="#b6a0ff";
 
  [[300,175],[300,325],[240,225],
