@@ -1,0 +1,548 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bone Breaker 2.0</title>
+<style>
+* {box-sizing:border-box}
+body {
+ margin:0;
+ background:#151525;
+ color:white;
+ font-family:Arial,sans-serif;
+ text-align:center;
+}
+header {
+ padding:15px;
+ background:#24243d;
+ border-bottom:3px solid #855cff;
+}
+h1 {margin:0;color:#a98aff}
+main {
+ display:flex;
+ justify-content:center;
+ align-items:flex-start;
+ gap:15px;
+ padding:15px;
+ flex-wrap:wrap;
+}
+#arena {
+ width:600px;
+ max-width:100%;
+ height:520px;
+ background:linear-gradient(#30304c,#19192b);
+ border:3px solid #6960a5;
+ border-radius:15px;
+ overflow:hidden;
+}
+canvas {width:100%;height:100%}
+#panel {
+ width:220px;
+ background:#24243d;
+ padding:15px;
+ border-radius:15px;
+}
+.tool {
+ width:100%;
+ padding:12px;
+ margin:5px 0;
+ border:2px solid #6960a5;
+ border-radius:9px;
+ background:#353554;
+ color:white;
+ cursor:pointer;
+ font-size:15px;
+}
+.tool:hover,.tool.active {
+ background:#7956d9;
+ border-color:#c2a9ff;
+}
+.stat {
+ background:#171729;
+ padding:10px;
+ border-radius:8px;
+ margin:10px 0;
+}
+#message {
+ color:#c7b3ff;
+ min-height:45px;
+ margin-top:10px;
+}
+#reset {background:#a34b68}
+footer {padding:12px;color:#aaa}
+</style>
+</head>
+<body>
+
+<header>
+<h1>JUSTIN BREAKER</h1>
+<p>KILL him</p>
+</header>
+
+<main>
+<div id="arena">
+<canvas id="game" width="600" height="520"></canvas>
+</div>
+
+
+<h3>🦴 Character Status</h3>
+
+<div class="stat">
+Pieces detached: <b id="broken">0</b>/6
+</div>
+
+<div class="stat">
+Score: <b id="score">0</b>
+</div>
+
+<div class="stat">
+Mood: <b id="mood">Happy 😊</b>
+</div>
+
+<div class="stat">
+Sadness: <b id="sadness">0%</b>
+</div>
+
+<button class="tool" id="reset">🔄 Reset Character</button>
+
+<div id="message">
+Choose a tool and click the character!
+</div>
+</div>
+</main>
+
+<footer>BONE BREAKER v2.0 | Cartoon Ragdoll Playground</footer>
+
+<script>
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+let selected="hand";
+let score=0;
+let detached=0;
+let pieces=[];
+let particles=[];
+let ball=null;
+let mood="Happy 😊";
+
+const floor=465;
+
+const bones=[
+ {name:"Left Arm",x:240,y:225,hits:0,detached:false},
+ {name:"Right Arm",x:360,y:225,hits:0,detached:false},
+ {name:"Left Leg",x:270,y:365,hits:0,detached:false},
+ {name:"Right Leg",x:330,y:365,hits:0,detached:false},
+ {name:"Head",x:300,y:105,hits:0,detached:false},
+ {name:"Torso",x:300,y:260,hits:0,detached:false}
+];
+
+function drawBone(x1,y1,x2,y2,color="#e8e4d5",width=13){
+ ctx.strokeStyle=color;
+ ctx.lineWidth=width;
+ ctx.lineCap="round";
+ ctx.beginPath();
+ ctx.moveTo(x1,y1);
+ ctx.lineTo(x2,y2);
+ ctx.stroke();
+
+ ctx.fillStyle=color;
+ ctx.beginPath();
+ ctx.arc(x1,y1,width/2,0,Math.PI*2);
+ ctx.arc(x2,y2,width/2,0,Math.PI*2);
+ ctx.fill();
+}
+
+function drawCharacter(){
+
+ // Shadow
+ ctx.fillStyle="rgba(0,0,0,.25)";
+ ctx.beginPath();
+ ctx.ellipse(300,465,90,12,0,0,Math.PI*2);
+ ctx.fill();
+
+ // Torso
+ if(!bones[5].detached){
+  drawBone(300,175,300,335,"#8c92a9",27);
+  drawBone(300,195,300,325,"#dcd9ca",12);
+ }
+
+ // Arms
+ if(!bones[0].detached){
+  drawBone(300,195,240,225);
+  drawBone(240,225,215,290);
+ }
+
+ if(!bones[1].detached){
+  drawBone(300,195,360,225);
+  drawBone(360,225,385,290);
+ }
+
+ // Legs
+ if(!bones[2].detached){
+  drawBone(300,325,270,365);
+  drawBone(270,365,250,435);
+ }
+
+ if(!bones[3].detached){
+  drawBone(300,325,330,365);
+  drawBone(330,365,350,435);
+ }
+
+ // Head and emotions
+ if(!bones[4].detached){
+
+  ctx.fillStyle="#cc883f";
+  ctx.beginPath();
+  ctx.arc(300,105,39,0,Math.PI*2);
+  ctx.fill();
+
+  let sadness=detached;
+
+  // Eyes
+  ctx.fillStyle="#262638";
+  ctx.beginPath();
+
+  if(sadness>=4){
+   ctx.arc(287,105,4,0,Math.PI*2);
+   ctx.arc(313,105,4,0,Math.PI*2);
+  }else{
+   ctx.arc(287,100,4,0,Math.PI*2);
+   ctx.arc(313,100,4,0,Math.PI*2);
+  }
+
+  ctx.fill();
+
+  // Eyebrows
+  ctx.strokeStyle="#262638";
+  ctx.lineWidth=3;
+  ctx.beginPath();
+
+  if(sadness>=2){
+   ctx.moveTo(279,91);
+   ctx.lineTo(292,96);
+   ctx.moveTo(321,96);
+   ctx.lineTo(308,91);
+  }else{
+   ctx.moveTo(280,88);
+   ctx.lineTo(293,90);
+   ctx.moveTo(320,88);
+   ctx.lineTo(307,90);
+  }
+
+  ctx.stroke();
+
+  // Mouth
+  ctx.beginPath();
+
+  if(sadness===0){
+   ctx.arc(300,105,13,0.2,Math.PI-0.2);
+  }else if(sadness===1){
+   ctx.moveTo(289,119);
+   ctx.lineTo(311,119);
+  }else{
+   ctx.arc(300,128,12,Math.PI+0.2,Math.PI*2-0.2);
+  }
+
+  ctx.stroke();
+
+  // Tears
+  if(sadness>=3){
+   ctx.fillStyle="#55cfff";
+   ctx.beginPath();
+   ctx.ellipse(285,119,4,8,0,0,Math.PI*2);
+   ctx.ellipse(315,119,4,8,0,0,Math.PI*2);
+   ctx.fill();
+  }
+
+  // Heartbreak
+  if(sadness>=6){
+   ctx.font="25px Arial";
+   ctx.fillText("💔",330,75);
+  }
+ }
+
+ // Joints
+ ctx.fillStyle="#b6a0ff";
+
+ [[300,175],[300,325],[240,225],
+ [360,225],[270,365],[330,365]]
+ .forEach(([x,y])=>{
+  ctx.beginPath();
+  ctx.arc(x,y,6,0,Math.PI*2);
+  ctx.fill();
+ });
+}
+
+function drawPieces(){
+ pieces.forEach(p=>{
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  ctx.rotate(p.rotation);
+  drawBone(-p.length/2,0,p.length/2,0);
+  ctx.restore();
+ });
+}
+
+function drawParticles(){
+ particles.forEach(p=>{
+  ctx.globalAlpha=p.life/30;
+  ctx.fillStyle=p.color;
+  ctx.beginPath();
+  ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+  ctx.fill();
+  ctx.globalAlpha=1;
+ });
+}
+
+function drawBall(){
+ if(!ball)return;
+ ctx.fillStyle="#ffbd45";
+ ctx.beginPath();
+ ctx.arc(ball.x,ball.y,18,0,Math.PI*2);
+ ctx.fill();
+ ctx.strokeStyle="#fff0b0";
+ ctx.lineWidth=4;
+ ctx.stroke();
+}
+
+function update(){
+ pieces.forEach(p=>{
+  p.x+=p.vx;
+  p.y+=p.vy;
+  p.vy+=0.35;
+  p.rotation+=p.spin;
+
+  if(p.y>floor-5){
+   p.y=floor-5;
+   p.vy*=-0.55;
+   p.vx*=0.85;
+  }
+ });
+
+ particles.forEach(p=>{
+  p.x+=p.vx;
+  p.y+=p.vy;
+  p.vy+=0.1;
+  p.life--;
+ });
+
+ particles=particles.filter(p=>p.life>0);
+
+ if(ball){
+  ball.x+=ball.vx;
+  ball.y+=ball.vy;
+  ball.vy+=0.35;
+
+  if(ball.y>floor-15){
+   ball.y=floor-15;
+   ball.vy*=-0.8;
+  }
+
+  if(ball.x<15||ball.x>585)ball.vx*=-1;
+
+  ball.life--;
+  if(ball.life<=0)ball=null;
+ }
+}
+
+function createParticles(x,y){
+ for(let i=0;i<12;i++){
+  particles.push({
+   x,y,
+   vx:(Math.random()-.5)*8,
+   vy:(Math.random()-.5)*8,
+   life:30,
+   size:Math.random()*5+2,
+   color:["#b99aff","#ffe17b","#8ceaff"][i%3]
+  });
+ }
+}
+
+function updateUI(){
+ const moods=[
+  "Happy ",
+  "Concerned ",
+  "Worried ",
+  "Sad ",
+  "Very Upset ",
+  "Heartbroken ",
+  "Extremely Sad "
+ ];
+
+ mood=moods[detached];
+
+ document.getElementById("broken").textContent=detached;
+ document.getElementById("score").textContent=score;
+ document.getElementById("mood").textContent=mood;
+ document.getElementById("sadness").textContent=
+ Math.round(detached/6*100)+"%";
+}
+
+function hitCharacter(x,y){
+
+ let target=null;
+ let closest=Infinity;
+
+ bones.forEach(b=>{
+  if(b.detached)return;
+
+  let d=Math.hypot(x-b.x,y-b.y);
+
+  if(d<65&&d<closest){
+   closest=d;
+   target=b;
+  }
+ });
+
+ if(!target){
+  document.getElementById("message").textContent=
+  "Try clicking closer to the character!";
+  return;
+ }
+
+ let power=selected==="mallet"?2:1;
+
+ target.hits+=power;
+ score+=10*power;
+
+ createParticles(target.x,target.y);
+
+ if(selected==="blast"){
+  target.x+=(Math.random()-.5)*35;
+  target.y-=15;
+ }
+
+ if(target.hits>=3&&!target.detached){
+
+  target.detached=true;
+  detached++;
+
+  pieces.push({
+   x:target.x,
+   y:target.y,
+   vx:(Math.random()-.5)*9,
+   vy:-7,
+   spin:(Math.random()-.5)*0.2,
+   rotation:Math.random()*2,
+   length:target.name==="Torso"?55:40
+  });
+
+  score+=100;
+
+  document.getElementById("message").textContent=
+  "✨ "+target.name+" popped loose!";
+
+ }else{
+  document.getElementById("message").textContent=
+  "BONK! "+target.name+" is wobbling!";
+ }
+
+ updateUI();
+
+ if(detached===6){
+  document.getElementById("message").textContent=
+  "💔 All pieces detached! Your character is heartbroken!";
+ }
+}
+
+function animate(){
+ ctx.clearRect(0,0,600,520);
+
+ ctx.fillStyle="#41415b";
+ ctx.fillRect(0,floor,600,55);
+
+ ctx.strokeStyle="#69698a";
+ ctx.lineWidth=3;
+ ctx.beginPath();
+ ctx.moveTo(0,floor);
+ ctx.lineTo(600,floor);
+ ctx.stroke();
+
+ drawCharacter();
+ drawPieces();
+ drawBall();
+ drawParticles();
+ update();
+
+ requestAnimationFrame(animate);
+}
+
+canvas.addEventListener("pointerdown",e=>{
+ const rect=canvas.getBoundingClientRect();
+
+ const x=(e.clientX-rect.left)*600/rect.width;
+ const y=(e.clientY-rect.top)*520/rect.height;
+
+ if(selected==="ball"){
+  ball={
+   x,y,
+   vx:(x-300)*0.08,
+   vy:-7,
+   life:100
+  };
+
+  score+=5;
+  updateUI();
+  return;
+ }
+
+ hitCharacter(x,y);
+});
+
+document.querySelectorAll("[data-tool]").forEach(button=>{
+ button.addEventListener("click",()=>{
+  selected=button.dataset.tool;
+
+  document.querySelectorAll("[data-tool]")
+  .forEach(b=>b.classList.remove("active"));
+
+  button.classList.add("active");
+
+  document.getElementById("message").textContent=
+  "Selected: "+button.textContent;
+ });
+});
+
+document.getElementById("reset").addEventListener("click",()=>{
+ bones.forEach(b=>{
+  b.hits=0;
+  b.detached=false;
+  b.x={
+   "Left Arm":240,
+   "Right Arm":360,
+   "Left Leg":270,
+   "Right Leg":330,
+   "Head":300,
+   "Torso":300
+  }[b.name];
+
+  b.y={
+   "Left Arm":225,
+   "Right Arm":225,
+   "Left Leg":365,
+   "Right Leg":365,
+   "Head":105,
+   "Torso":260
+  }[b.name];
+ });
+
+ pieces=[];
+ particles=[];
+ ball=null;
+ detached=0;
+ score=0;
+
+ updateUI();
+
+ document.getElementById("message").textContent=
+ "Character restored! Have fun!";
+});
+
+updateUI();
+animate();
+</script>
+
+</body>
+</html>
